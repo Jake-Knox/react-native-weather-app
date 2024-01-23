@@ -3,20 +3,29 @@ import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 import axios from 'axios';
 
 import config from '../config';
+import WeatherImage from './WeatherImage';
 
 const WeatherScreen = () => {
-    const apiKey = config.apiKey;
+    const weatherApiKey = config.weatherApiKey;
 
     const [location, setLocation] = useState('');
     const [weatherData, setWeatherData] = useState(null);
+    const [searchStatus, setSearchStatus] = useState(false);
+
+    // Update the search status when a new search happens
+    const handleNewSearch = () => {
+        setSearchStatus(true);
+    };
 
     const getWeatherData = async () => {
         try {
             const response = await axios.get(
-                `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${apiKey}`
+                `https://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${weatherApiKey}`
             );
             // console.log(response);
             setWeatherData(response.data);
+            handleNewSearch(); // in WeatherImage.js to initiate image api call
+
         } catch (error) {
             console.error('Error fetching weather data:', error);
         }
@@ -24,24 +33,36 @@ const WeatherScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.heading}>Enter Location:</Text>
+            <Text style={styles.heading}>Weather App</Text>
             <TextInput
                 style={styles.input}
                 onChangeText={(text) => setLocation(text)}
                 value={location}
-                placeholder='Enter Location'
+                placeholder="Enter Location"
             />
-            <Button title='Get Weather' onPress={getWeatherData} />
+            <Button title="Get Weather" onPress={getWeatherData} />
             {weatherData && (
                 <View style={styles.weatherContainer}>
-                    <Text style={styles.weatherInfo}>Weather Information for {weatherData.name}:</Text>
-                    <Text style={styles.weatherInfo}>Temperature {weatherData.main.temp}°C</Text>
-                    <Text style={styles.weatherInfo}>Description {weatherData.weather[0].description}</Text>
+                    <Text style={styles.weatherInfo}>
+                        Weather Information for {weatherData.name}:
+                    </Text>
+                    <Text style={styles.weatherInfo}>
+                        Temperature: {weatherData.main.temp} °C
+                    </Text>
+                    <Text style={styles.weatherInfo}>
+                        Current weather: {weatherData.weather[0].description}
+                    </Text>
+                    <WeatherImage
+                        location={location}
+                        weatherCondition={weatherData.weather[0].description}
+                        searchStatus={searchStatus}
+                        setSearchStatus={setSearchStatus}
+                    />
                 </View>
             )}
         </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {
